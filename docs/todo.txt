@@ -1,0 +1,3 @@
+- fare due reti una online per il serpente e una in background per il training
+- ogni morte del serpente prima di cominciare un nuovo gioco copio i pesi dalla rete di training a quella online
+- i primi n giochi non visualizzarli neanche, sono la preparazione
