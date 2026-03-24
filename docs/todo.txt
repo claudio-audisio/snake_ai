@@ -1,3 +1,4 @@
-- fare due reti una online per il serpente e una in background per il training
-- ogni morte del serpente prima di cominciare un nuovo gioco copio i pesi dalla rete di training a quella online
-- i primi n giochi non visualizzarli neanche, sono la preparazione
+game 708 - memory 3000 - step 4.23729 - score 0.177966
+- aggiungere 4 input allo stato (pericoli intorno alla testa) e fare confronto con il dato qua sopra
+
+

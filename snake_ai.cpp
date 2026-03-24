@@ -7,6 +7,10 @@
 Board board;
 Agent agent;
 double epsilon = 1;
+int games = 0, step = 0, score = 0;
+deque<int> steps;
+deque<int> scores;
+
 
 void init() {
 	//SetConfigFlags(FLAG_WINDOW_UNDECORATED);
@@ -17,7 +21,7 @@ void init() {
 	agent.init();
 }
 
-int newDirection(tiny_dnn::vec_t* state) {
+int newDirection(const tiny_dnn::vec_t* state) {
 	if (drand48() < epsilon) {
 		return randomInt(0, 3);
 	}
@@ -25,13 +29,67 @@ int newDirection(tiny_dnn::vec_t* state) {
 	return agent.getAction(state);
 }
 
+void addStep(const int value) {
+	steps.push_back(value);
+
+	if (steps.size() > 100) {
+		steps.pop_front();
+	}
+}
+
+void addScore(const int value) {
+	scores.push_back(value);
+
+	if (scores.size() > 100) {
+		scores.pop_front();
+	}
+}
+
+float mean(const deque<int>& values) {
+	int sum = 0;
+
+	for (const int value : values) {
+		sum += value;
+	}
+
+	return static_cast<float>(sum) / values.size();
+}
+
+void stepFwd(bool update = true) {
+	tiny_dnn::vec_t* state = board.getState();
+	const int direction = newDirection(state);
+	const float reward = board.moveSnake(direction);
+	tiny_dnn::vec_t* nextState = board.getState();
+	agent.save(state, direction, reward, nextState, reward == DEATH);
+	step++;
+
+	if (reward == DEATH) {
+		games++;
+		board.reset();
+		steps.push_back(step);
+		scores.push_back(score);
+		score = step = 0;
+		epsilon = max(0.01, epsilon * 0.995);
+
+		cout << "game " << games << " - memory " << agent.getMemorySize() << " - step " << mean(steps) << " - score " << mean(scores) << endl;
+
+		if (update) {
+			agent.updateNet();
+		}
+	} else if (reward == EAT) {
+		score++;
+	}
+}
+
+void initMemory() {
+	while (agent.getMemorySize() < 1000) {
+		stepFwd(false);
+	}
+}
+
 int main() {
 	init();
-
-	unsigned long long i = 0;
-	int score = 0;
-	int games = 0;
-	int step = 0;
+	initMemory();
 
 	while (!WindowShouldClose()) {
 		BeginDrawing();
@@ -41,24 +99,7 @@ int main() {
 
 		EndDrawing();
 
-		tiny_dnn::vec_t state = board.getState();
-		const int direction = newDirection(&state);
-		const float reward = board.moveSnake(direction);
-		tiny_dnn::vec_t nextState = board.getState();
-		agent.save(&state, direction, reward, &nextState, reward == DEATH);
-		step++;
-
-		if (reward == DEATH) {
-			games++;
-			board.reset();
-			cout << "game " << games << " - memory " << agent.getMemorySize() << " - step " << step << " - score " << score << endl;
-			epsilon = max(0.01, epsilon * 0.995);
-			i = score = step = 0;
-		} else if (reward == EAT) {
-			score++;
-		}
-
-		agent.train(TRAINING_SIZE);
+		stepFwd();
 	}
 
 	CloseWindow();

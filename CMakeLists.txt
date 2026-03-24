@@ -4,8 +4,8 @@ project(snake_ai)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -flto=auto -DNDEBUG -fopenmp")
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -pthread")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -flto=auto -DNDEBUG -fopenmp -pthread")
 
 add_library(snakeLib INTERFACE)
 target_include_directories(snakeLib INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})

@@ -82,14 +82,18 @@ public:
     	return false;
     }
 
-	tiny_dnn::vec_t getState() const {
-	    tiny_dnn::vec_t state(8, 0);
+	tiny_dnn::vec_t* getState() const {
+	    auto state = new tiny_dnn::vec_t(8, 0);
 
-    	state[snake.direction] = 1;
-    	state[UP + 4] = snake.getHead().y > sbPos.y;
-    	state[RIGHT + 4] = snake.getHead().x < sbPos.x;
-    	state[DOWN + 4] = snake.getHead().y < sbPos.y;
-    	state[LEFT + 4] = snake.getHead().x > sbPos.x;
+    	(*state)[snake.direction] = 1;
+    	(*state)[UP + 4] = snake.getHead().y > sbPos.y;
+    	(*state)[RIGHT + 4] = snake.getHead().x < sbPos.x;
+    	(*state)[DOWN + 4] = snake.getHead().y < sbPos.y;
+    	(*state)[LEFT + 4] = snake.getHead().x > sbPos.x;
+    	/*(*state)[UP + 8] = snake.isBody()
+    	(*state)[RIGHT + 8] = snake.getHead().x < sbPos.x;
+    	(*state)[DOWN + 8] = snake.getHead().y < sbPos.y;
+    	(*state)[LEFT + 8] = snake.getHead().x > sbPos.x;*/
 
     	return state;
     }

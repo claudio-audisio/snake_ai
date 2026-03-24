@@ -1,7 +1,7 @@
 #pragma once
 
 
-#define FPS				60
+#define FPS				5
 
 #define WINDOW_WIDTH	800
 #define WINDOW_HEIGHT	600

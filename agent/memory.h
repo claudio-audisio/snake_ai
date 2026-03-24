@@ -9,10 +9,13 @@ using namespace std;
 class Memory {
 public:
 	deque<Experience> memory;
+	mutex mtx;
 
 	Memory() = default;
 
 	void push(tiny_dnn::vec_t* state, const int direction, const float reward, tiny_dnn::vec_t* nextState, const bool gameOver) {
+		lock_guard<mutex> lock(mtx);
+
 		memory.push_back({state, direction, reward, nextState, gameOver});
 
 		if (memory.size() > MAX_MEMORY) {
@@ -29,6 +32,8 @@ public:
 
 		mt19937 rng{random_device{}()};
 		uniform_int_distribution<int> dist(0, memory.size() - 1);
+
+		lock_guard<mutex> lock(mtx);
     
 		for (int i = 0; i < amount; i++) {
 			const int idx = dist(rng);
