@@ -18,7 +18,7 @@ public:
 	mutex tNetMtx;
 	atomic<bool> readyToTrain{false}, running{true};
 	thread trainingThread;
-	int lastUpdate = 0;
+	int lastUpdate = 0, generation = 0;
 
 	Agent(const int startUpdating) {
 		lastUpdate = startUpdating - UPDATE_FREQ;
@@ -47,7 +47,7 @@ public:
 
 	void updateNet() {
 		if (memory.size() > lastUpdate + UPDATE_FREQ) {
-			cout << "generation " << lastUpdate / UPDATE_FREQ << endl;
+			cout << "generation " << ++generation << endl;
 			lastUpdate += UPDATE_FREQ;
 			lock_guard<mutex> lock(tNetMtx);
 

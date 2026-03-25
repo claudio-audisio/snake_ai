@@ -22,6 +22,6 @@ float randomYPos() {
 	return randomInt(0, WINDOW_HEIGHT / CELL_SIZE - 1) * CELL_SIZE;
 }
 
-bool posEquals(Vector2 pos1, Vector2 pos2) {
+bool posEquals(const Vector2 pos1, const Vector2 pos2) {
 	return pos1.x == pos2.x && pos1.y == pos2.y;
 }

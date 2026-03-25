@@ -13,7 +13,8 @@ class Board {
 public:
 	Texture2D strawberry;
 	Vector2 sbPos;
-	Snake snake;
+	Snake snakeG;
+	Snake snakeY;
 
     Board() {}
 
@@ -23,7 +24,13 @@ public:
     }
 
 	void reset() {
-    	snake.init();
+    	snakeG.init(DARKGREEN);
+    	snakeY.init(GOLD);
+
+    	while (posEquals(snakeY.getHead(), snakeG.getHead())) {
+    		snakeY.init(GOLD);
+    	}
+
     	newStrawberry();
     }
 
@@ -36,14 +43,15 @@ public:
     		DrawLineEx({0, static_cast<float>(i)}, {WINDOW_WIDTH, static_cast<float>(i)}, 1, LINE_COLOR);
     	}
 
-    	snake.draw();
+    	snakeG.draw();
+    	snakeY.draw();
     	drawStrawberry();
     }
 
     void newStrawberry() {
 	    Vector2 newPos = {randomXPos(), randomYPos()};
 
-    	while (snake.isBody(newPos)) {
+    	while (snakeG.isBody(newPos) || snakeY.isBody(newPos)) {
     		newPos = {randomXPos(), randomYPos()};
     	}
 
@@ -54,45 +62,80 @@ public:
     	DrawTextureV(strawberry, sbPos, WHITE);
     }
 
-	float moveSnake(const int direction) {
-    	const Vector2 newHead = snake.getNewHead(direction);
+	pair<float, float> moveSnakes(const int gDirection, const int yDirection) {
+    	float gReward = SURVIVED, yReward = SURVIVED;
+    	const Vector2 newGHead = snakeG.getNewHead(gDirection);
+    	const Vector2 newYHead = snakeY.getNewHead(yDirection);
 
-    	if (isHitting(newHead, direction)) {
-    		snake.move(newHead, direction, false);
-    		return DEATH;
+    	if (isGHitting(newGHead, gDirection)) {
+    		gReward = DEATH;
     	}
 
-    	const bool eat = posEquals(newHead, sbPos);
-    	snake.move(newHead, direction, eat);
+    	if (isYHitting(newYHead, yDirection)) {
+    		yReward = DEATH;
+    	}
 
-    	if (eat) {
+    	if (posEquals(newGHead, newYHead)) {
+    		gReward = DEATH;
+    		yReward = DEATH;
+    	}
+
+    	const bool gEat = gReward != DEATH && posEquals(newGHead, sbPos);
+    	snakeG.move(newGHead, gDirection, gEat);
+
+    	const bool yEat = yReward != DEATH && posEquals(newYHead, sbPos);
+    	snakeY.move(newYHead, yDirection, yEat);
+
+    	if (gEat || yEat) {
     		newStrawberry();
-    		return EAT;
     	}
 
-    	return SURVIVED;
+    	gReward = gEat ? EAT : gReward;
+    	yReward = yEat ? EAT : yReward;
+
+    	return {gReward, yReward};
     }
 
 	static bool isWall(const Vector2 newHead) {
     	return newHead.x < 0 || newHead.x >= WINDOW_WIDTH || newHead.y < 0 || newHead.y >= WINDOW_HEIGHT;
     }
 
-	bool isHitting(const Vector2 pos, const int direction) const {
-	    return snake.isBody(pos) || isWall(pos) || snake.isOppositeDirection(direction);
+	bool isGHitting(const Vector2 pos, const int direction) const {
+	    return snakeG.isBody(pos) || snakeY.isBody(pos) || isWall(pos) || snakeG.isOppositeDirection(direction);
     }
 
-	tiny_dnn::vec_t* getState() const {
+	bool isYHitting(const Vector2 pos, const int direction) const {
+    	return snakeG.isBody(pos) || snakeY.isBody(pos) || isWall(pos) || snakeY.isOppositeDirection(direction);
+    }
+
+	tiny_dnn::vec_t* getGState() const {
 	    auto state = new tiny_dnn::vec_t(12, 0);
 
-    	(*state)[snake.direction] = 1;
-    	(*state)[UP + 4] = snake.getHead().y > sbPos.y;
-    	(*state)[RIGHT + 4] = snake.getHead().x < sbPos.x;
-    	(*state)[DOWN + 4] = snake.getHead().y < sbPos.y;
-    	(*state)[LEFT + 4] = snake.getHead().x > sbPos.x;
-    	(*state)[UP + 8] = isHitting(snake.getNearHead(UP), UP);
-    	(*state)[RIGHT + 8] = isHitting(snake.getNearHead(RIGHT), RIGHT);
-    	(*state)[DOWN + 8] = isHitting(snake.getNearHead(DOWN), DOWN);
-    	(*state)[LEFT + 8] = isHitting(snake.getNearHead(LEFT), LEFT);
+    	(*state)[snakeG.direction] = 1;
+    	(*state)[UP + 4] = snakeG.getHead().y > sbPos.y;
+    	(*state)[RIGHT + 4] = snakeG.getHead().x < sbPos.x;
+    	(*state)[DOWN + 4] = snakeG.getHead().y < sbPos.y;
+    	(*state)[LEFT + 4] = snakeG.getHead().x > sbPos.x;
+    	(*state)[UP + 8] = isGHitting(snakeG.getNearHead(UP), UP);
+    	(*state)[RIGHT + 8] = isGHitting(snakeG.getNearHead(RIGHT), RIGHT);
+    	(*state)[DOWN + 8] = isGHitting(snakeG.getNearHead(DOWN), DOWN);
+    	(*state)[LEFT + 8] = isGHitting(snakeG.getNearHead(LEFT), LEFT);
+
+    	return state;
+    }
+
+	tiny_dnn::vec_t* getYState() const {
+    	auto state = new tiny_dnn::vec_t(12, 0);
+
+    	(*state)[snakeY.direction] = 1;
+    	(*state)[UP + 4] = snakeY.getHead().y > sbPos.y;
+    	(*state)[RIGHT + 4] = snakeY.getHead().x < sbPos.x;
+    	(*state)[DOWN + 4] = snakeY.getHead().y < sbPos.y;
+    	(*state)[LEFT + 4] = snakeY.getHead().x > sbPos.x;
+    	(*state)[UP + 8] = isYHitting(snakeY.getNearHead(UP), UP);
+    	(*state)[RIGHT + 8] = isYHitting(snakeY.getNearHead(RIGHT), RIGHT);
+    	(*state)[DOWN + 8] = isYHitting(snakeY.getNearHead(DOWN), DOWN);
+    	(*state)[LEFT + 8] = isYHitting(snakeY.getNearHead(LEFT), LEFT);
 
     	return state;
     }

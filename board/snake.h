@@ -14,17 +14,23 @@ class Snake
 public:
 	int direction;
 	deque<Vector2> snake;
+	Color color;
 
 	Snake() {}
 
-	void init() {
+	void init(const Color& color) {
+		this->color = color;
 		snake.clear();
 		snake.push_back({randomXPos(), randomYPos()});
 		direction = randomInt(0, 3);
 	}
 
+	void setHead(const Vector2 pos) {
+		snake.at(0) = pos;
+	}
+
 	void drawHead(Vector2 pos) {
-		DrawRectangleRounded({pos.x + 5, pos.y + 5, CELL_SIZE - 10, CELL_SIZE - 10}, 0.5, 1, LIGHTGRAY);
+		DrawRectangleRounded({pos.x + 5, pos.y + 5, CELL_SIZE - 10, CELL_SIZE - 10}, 0.5, 1, color);
 
 		switch (direction) {
 			case UP:
@@ -47,7 +53,7 @@ public:
 	}
 
 	void drawBody(Vector2 pos) {
-		DrawRectangleRounded({pos.x + 5, pos.y + 5, CELL_SIZE - 10, CELL_SIZE - 10}, 0.5, 1, LIGHTGRAY);
+		DrawRectangleRounded({pos.x + 5, pos.y + 5, CELL_SIZE - 10, CELL_SIZE - 10}, 0.5, 1, color);
 	}
 
 	void draw() {

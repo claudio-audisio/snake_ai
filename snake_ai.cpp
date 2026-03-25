@@ -5,11 +5,13 @@
 #include "common/constants.h"
 
 Board board;
-Agent agent(TRAINING_SIZE);
+Agent agentG(TRAINING_SIZE);
+Agent agentY(TRAINING_SIZE);
 double epsilon = 1;
-int games = 0, step = 0, score = 0;
+int games = 0, step = 0, gScore = 0, yScore = 0;
 deque<int> steps;
-deque<int> scores;
+deque<int> gScores;
+deque<int> yScores;
 
 
 void init() {
@@ -18,15 +20,24 @@ void init() {
 	SetWindowState(FLAG_WINDOW_ALWAYS_RUN);
 	SetTargetFPS(FPS);
 	board.init();
-	agent.init();
+	agentG.init();
+	agentY.init();
 }
 
-int newDirection(const tiny_dnn::vec_t* state) {
+int newDirectionG(const tiny_dnn::vec_t* state) {
 	if (drand48() < epsilon) {
 		return randomInt(0, 3);
 	}
 
-	return agent.getAction(state);
+	return agentG.getAction(state);
+}
+
+int newDirectionY(const tiny_dnn::vec_t* state) {
+	if (drand48() < epsilon) {
+		return randomInt(0, 3);
+	}
+
+	return agentY.getAction(state);
 }
 
 void addStep(const int value) {
@@ -37,11 +48,11 @@ void addStep(const int value) {
 	}
 }
 
-void addScore(const int value) {
-	scores.push_back(value);
+void addScore(deque<int>& values, const int value) {
+	values.push_back(value);
 
-	if (scores.size() > 100) {
-		scores.pop_front();
+	if (values.size() > 100) {
+		values.pop_front();
 	}
 }
 
@@ -56,33 +67,42 @@ float mean(const deque<int>& values) {
 }
 
 void stepFwd(const bool update = true) {
-	tiny_dnn::vec_t* state = board.getState();
-	const int direction = newDirection(state);
-	const float reward = board.moveSnake(direction);
-	tiny_dnn::vec_t* nextState = board.getState();
-	agent.save(state, direction, reward, nextState, reward == DEATH);
+	tiny_dnn::vec_t* gState = board.getGState();
+	const int gDirection = newDirectionG(gState);
+	tiny_dnn::vec_t* yState = board.getYState();
+	const int yDirection = newDirectionG(yState);
+	const pair<float, float> rewards = board.moveSnakes(gDirection, yDirection);
+	tiny_dnn::vec_t* nextGState = board.getGState();
+	agentG.save(gState, gDirection, rewards.first, nextGState, rewards.first == DEATH);
+	tiny_dnn::vec_t* nextYState = board.getYState();
+	agentY.save(yState, yDirection, rewards.second, nextYState, rewards.second == DEATH);
 	step++;
 
-	if (reward == DEATH) {
+	if (rewards.first == DEATH || rewards.second == DEATH) {
 		games++;
 		board.reset();
 		steps.push_back(step);
-		scores.push_back(score);
-		score = step = 0;
+		addScore(gScores, gScore);
+		addScore(yScores, yScore);
+		gScore = yScore = step = 0;
 		epsilon = max(0.01, epsilon * 0.995);
 
-		cout << "game " << games << " - memory " << agent.getMemorySize() << " - step " << mean(steps) << " - score " << mean(scores) << endl;
+		cout << "game " << games << " - memory " << agentG.getMemorySize() << "/" << agentY.getMemorySize()
+			<< " - step " << mean(steps) << " - score " << mean(gScores) << "/" << mean(yScores) << endl;
 
 		if (update) {
-			agent.updateNet();
+			agentG.updateNet();
+			agentY.updateNet();
 		}
-	} else if (reward == EAT) {
-		score++;
+	} else if (rewards.first == EAT) {
+		gScore++;
+	} else if (rewards.second == EAT) {
+		yScore++;
 	}
 }
 
 void initMemory() {
-	while (agent.getMemorySize() < TRAINING_SIZE) {
+	while (agentG.getMemorySize() < TRAINING_SIZE && agentY.getMemorySize() < TRAINING_SIZE) {
 		stepFwd(false);
 	}
 }
