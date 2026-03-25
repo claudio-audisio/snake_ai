@@ -1,7 +1,7 @@
 #pragma once
 
 
-#define FPS				5
+#define FPS				10
 
 #define WINDOW_WIDTH	800
 #define WINDOW_HEIGHT	600
@@ -21,3 +21,4 @@
 
 #define MAX_MEMORY		100000
 #define TRAINING_SIZE	1000
+#define UPDATE_FREQ		500

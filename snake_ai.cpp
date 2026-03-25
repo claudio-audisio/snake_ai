@@ -5,7 +5,7 @@
 #include "common/constants.h"
 
 Board board;
-Agent agent;
+Agent agent(TRAINING_SIZE);
 double epsilon = 1;
 int games = 0, step = 0, score = 0;
 deque<int> steps;
@@ -55,7 +55,7 @@ float mean(const deque<int>& values) {
 	return static_cast<float>(sum) / values.size();
 }
 
-void stepFwd(bool update = true) {
+void stepFwd(const bool update = true) {
 	tiny_dnn::vec_t* state = board.getState();
 	const int direction = newDirection(state);
 	const float reward = board.moveSnake(direction);
@@ -82,7 +82,7 @@ void stepFwd(bool update = true) {
 }
 
 void initMemory() {
-	while (agent.getMemorySize() < 1000) {
+	while (agent.getMemorySize() < TRAINING_SIZE) {
 		stepFwd(false);
 	}
 }

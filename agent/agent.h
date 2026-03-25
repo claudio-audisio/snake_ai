@@ -18,8 +18,11 @@ public:
 	mutex tNetMtx;
 	atomic<bool> readyToTrain{false}, running{true};
 	thread trainingThread;
+	int lastUpdate = 0;
 
-	Agent() = default;
+	Agent(const int startUpdating) {
+		lastUpdate = startUpdating - UPDATE_FREQ;
+	}
 
 	~Agent() {
 		running = false;
@@ -27,11 +30,11 @@ public:
 	}
 
 	void init() {
-		onLineNet << tiny_dnn::layers::fc(8, 256)  << tiny_dnn::activation::relu()
+		onLineNet << tiny_dnn::layers::fc(12, 256)  << tiny_dnn::activation::relu()
 			<< tiny_dnn::layers::fc(256, 128) << tiny_dnn::activation::relu()
 			<< tiny_dnn::layers::fc(128, 4);
 
-		trainingNet << tiny_dnn::layers::fc(8, 256)  << tiny_dnn::activation::relu()
+		trainingNet << tiny_dnn::layers::fc(12, 256)  << tiny_dnn::activation::relu()
 			<< tiny_dnn::layers::fc(256, 128) << tiny_dnn::activation::relu()
 			<< tiny_dnn::layers::fc(128, 4);
 
@@ -43,15 +46,18 @@ public:
 	}
 
 	void updateNet() {
-		//cout << "updating..." << endl;
-		lock_guard<mutex> lock(tNetMtx);
+		if (memory.size() > lastUpdate + UPDATE_FREQ) {
+			cout << "generation " << lastUpdate / UPDATE_FREQ << endl;
+			lastUpdate += UPDATE_FREQ;
+			lock_guard<mutex> lock(tNetMtx);
 
-		for (int i = 0; i < trainingNet.depth(); i++) {
-			vector<tiny_dnn::vec_t*> fromWeights = trainingNet[i]->weights();
-			vector<tiny_dnn::vec_t*> toWeights   = onLineNet[i]->weights();
+			for (int i = 0; i < trainingNet.depth(); i++) {
+				vector<tiny_dnn::vec_t*> fromWeights = trainingNet[i]->weights();
+				vector<tiny_dnn::vec_t*> toWeights   = onLineNet[i]->weights();
 
-			for (int j = 0; j < fromWeights.size(); j++) {
-				*toWeights[j] = *fromWeights[j];
+				for (int j = 0; j < fromWeights.size(); j++) {
+					*toWeights[j] = *fromWeights[j];
+				}
 			}
 		}
 	}

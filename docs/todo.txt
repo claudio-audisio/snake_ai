@@ -1,4 +1,3 @@
-game 708 - memory 3000 - step 4.23729 - score 0.177966
-- aggiungere 4 input allo stato (pericoli intorno alla testa) e fare confronto con il dato qua sopra
-
-
+game 708 - memory 3000 - step 4.23729 - score 0.177966      (senza input di pericolo)
+game 700 - memory 18443 - step 26.3471 - score 1.79429      (update ogni 25 giochi)
+game 700 - memory 17172 - step 24.5314 - score 1.77286      (update ogni 500 esperienze)

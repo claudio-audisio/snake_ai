@@ -57,7 +57,7 @@ public:
 	float moveSnake(const int direction) {
     	const Vector2 newHead = snake.getNewHead(direction);
 
-    	if (snake.isBody(newHead) || isHitWall(newHead) || snake.isOppositeDirection(direction)) {
+    	if (isHitting(newHead, direction)) {
     		snake.move(newHead, direction, false);
     		return DEATH;
     	}
@@ -73,27 +73,26 @@ public:
     	return SURVIVED;
     }
 
-	static bool isHitWall(const Vector2 newHead) {
-    	if (newHead.x < 0 || newHead.x >= WINDOW_WIDTH || newHead.y < 0 || newHead.y >= WINDOW_HEIGHT) {
-    		//cout << "wall!" << endl;
-    		return true;
-    	}
+	static bool isWall(const Vector2 newHead) {
+    	return newHead.x < 0 || newHead.x >= WINDOW_WIDTH || newHead.y < 0 || newHead.y >= WINDOW_HEIGHT;
+    }
 
-    	return false;
+	bool isHitting(const Vector2 pos, const int direction) const {
+	    return snake.isBody(pos) || isWall(pos) || snake.isOppositeDirection(direction);
     }
 
 	tiny_dnn::vec_t* getState() const {
-	    auto state = new tiny_dnn::vec_t(8, 0);
+	    auto state = new tiny_dnn::vec_t(12, 0);
 
     	(*state)[snake.direction] = 1;
     	(*state)[UP + 4] = snake.getHead().y > sbPos.y;
     	(*state)[RIGHT + 4] = snake.getHead().x < sbPos.x;
     	(*state)[DOWN + 4] = snake.getHead().y < sbPos.y;
     	(*state)[LEFT + 4] = snake.getHead().x > sbPos.x;
-    	/*(*state)[UP + 8] = snake.isBody()
-    	(*state)[RIGHT + 8] = snake.getHead().x < sbPos.x;
-    	(*state)[DOWN + 8] = snake.getHead().y < sbPos.y;
-    	(*state)[LEFT + 8] = snake.getHead().x > sbPos.x;*/
+    	(*state)[UP + 8] = isHitting(snake.getNearHead(UP), UP);
+    	(*state)[RIGHT + 8] = isHitting(snake.getNearHead(RIGHT), RIGHT);
+    	(*state)[DOWN + 8] = isHitting(snake.getNearHead(DOWN), DOWN);
+    	(*state)[LEFT + 8] = isHitting(snake.getNearHead(LEFT), LEFT);
 
     	return state;
     }

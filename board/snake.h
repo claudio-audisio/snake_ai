@@ -62,6 +62,20 @@ public:
 		return snake.at(0);
 	}
 
+	Vector2 getNearHead(const int direction) const {
+		Vector2 head = snake.at(0);
+
+		switch (direction) {
+			case UP: head.y -= CELL_SIZE; break;
+			case RIGHT: head.x += CELL_SIZE; break;
+			case DOWN: head.y += CELL_SIZE; break;
+			case LEFT: head.x -= CELL_SIZE; break;
+			default: break;
+		}
+
+		return head;
+	}
+
 	void move(const Vector2 newHead, const int direction, const bool eat) {
 		this->direction = direction;
 		snake.push_front(newHead);
@@ -89,7 +103,6 @@ public:
 	bool isBody(const Vector2 pos) const {
 		for (const Vector2 body : snake) {
 			if (posEquals(body, pos)) {
-				//cout << "body!" << endl;
 				return true;
 			}
 		}
@@ -98,12 +111,7 @@ public:
 	}
 
 	int isOppositeDirection(const int direction) const {
-		if (direction % 2 == this->direction % 2) {
-			//cout << "dietrofront!" << endl;
-			return true;
-		}
-
-		return false;
+		return this->direction != direction && direction % 2 == this->direction % 2;
 	}
 
 };
