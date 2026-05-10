@@ -26,7 +26,7 @@ void init() {
 
 int newDirectionG(const tiny_dnn::vec_t* state) {
 	if (drand48() < epsilon) {
-		return randomInt(0, 3);
+		return cl::randomInt(0, 3);
 	}
 
 	return agentG.getAction(state);
@@ -34,7 +34,7 @@ int newDirectionG(const tiny_dnn::vec_t* state) {
 
 int newDirectionY(const tiny_dnn::vec_t* state) {
 	if (drand48() < epsilon) {
-		return randomInt(0, 3);
+		return cl::randomInt(0, 3);
 	}
 
 	return agentY.getAction(state);

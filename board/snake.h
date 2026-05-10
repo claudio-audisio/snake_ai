@@ -2,7 +2,7 @@
 #include <deque>
 #include <raylib.h>
 #include <vector>
-
+#include "cl_random.h"
 #include "common/constants.h"
 #include "common/utils.h"
 
@@ -22,7 +22,7 @@ public:
 		this->color = color;
 		snake.clear();
 		snake.push_back({randomXPos(), randomYPos()});
-		direction = randomInt(0, 3);
+		direction = cl::randomInt(0, 3);
 	}
 
 	void setHead(const Vector2 pos) {
